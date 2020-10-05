@@ -26,6 +26,20 @@
 
 namespace flatbuffers {
 
+static std::string Translate(const std::string &qualified_name,
+                             const char *target, const char *replacement) {
+  std::string result = qualified_name;
+  size_t start_pos = 0;
+  auto target_size = std::strlen(target);
+  auto replacement_size = std::strlen(replacement);
+  size_t delta = replacement_size - target_size;
+  while ((start_pos = result.find(target, start_pos)) != std::string::npos) {
+    result.replace(start_pos, 1, replacement);
+    start_pos += 1 + delta;
+  }
+  return result;
+}
+
 // Make numerical literal with type-suffix.
 // This function is only needed for C++! Other languages do not need it.
 static inline std::string NumToStringCpp(std::string val, BaseType type) {
@@ -598,13 +612,7 @@ class CppGenerator : public BaseGenerator {
   // Translates a qualified name in flatbuffer text format to the same name in
   // the equivalent C++ namespace.
   static std::string TranslateNameSpace(const std::string &qualified_name) {
-    std::string cpp_qualified_name = qualified_name;
-    size_t start_pos = 0;
-    while ((start_pos = cpp_qualified_name.find('.', start_pos)) !=
-           std::string::npos) {
-      cpp_qualified_name.replace(start_pos, 1, "::");
-    }
-    return cpp_qualified_name;
+    return Translate(qualified_name, ".", "::");
   }
 
   bool TypeHasKey(const Type &type) {
@@ -2290,6 +2298,76 @@ class CppGenerator : public BaseGenerator {
         code_ += "{{ADD_OFFSET}}, {{ADD_NAME}});";
       }
       code_ += "  }";
+
+      // Type safe wrappers for union alternatives.
+      // For example for:
+      //
+      // table X {}
+      // table Y {}
+      //
+      // union U { label : X, Y }
+      //
+      // table T {
+      //   u : U;
+      // }
+      //
+      // we get:
+      //
+      // void add_u_label(flatbuffers::Offset<X> label) {
+      //   add_u_type(U::label);
+      //   add_u(label.Union());
+      // }
+      // void add_u(flatbuffers::Offset<Y> Y) {
+      //   add_u_type(U::Y);
+      //   add_u(Y.Union());
+      // }
+      if (field.value.type.base_type == BASE_TYPE_UNION) {
+        auto u = field.value.type.enum_def;
+
+        for (auto u_it = u->Vals().begin(); u_it != u->Vals().end(); ++u_it) {
+          auto &ev = **u_it;
+          if (ev.union_type.base_type == BASE_TYPE_NONE) { continue; }
+
+          auto fn_name = Name(field);
+          // Inelegant workaround to detect if the current alternative is
+          // labeled.
+          auto full_name = Name(ev);
+          if (full_name.find('_') == std::string::npos) {
+            full_name = cur_name_space_->GetFullyQualifiedName(full_name);
+            full_name = TranslateNameSpace(full_name);
+          } else {
+            full_name = Translate(full_name, "_", "::");
+          }
+          if (!(ev.union_type.struct_def &&
+                WrapInNameSpace(ev.union_type.struct_def->defined_namespace,
+                                ev.union_type.struct_def->name) == full_name)) {
+            fn_name += "_" + Name(ev);
+          }
+
+          code_.SetValue("FN_NAME", fn_name);
+          code_.SetValue("U_GET_TYPE",
+                         EscapeKeyword(field.name + UnionTypeFieldSuffix()));
+          code_.SetValue(
+              "U_ELEMENT_TYPE",
+              WrapInNameSpace(u->defined_namespace, GetEnumValUse(*u, ev)));
+          code_.SetValue("U_FIELD_TYPE",
+                         GenTypeWire(ev.union_type, " ", false));
+          code_.SetValue("U_FIELD_NAME", Name(ev));
+          if (IsScalar(ev.union_type.base_type)) {
+            code_.SetValue("U_CAST", Name(ev));
+          } else if (IsStruct(ev.union_type)) {
+            code_.SetValue("U_CAST",
+                           "fbb_.CreateStruct(*" + Name(ev) + ").Union()");
+          } else {
+            code_.SetValue("U_CAST", Name(ev) + ".Union()");
+          }
+
+          code_ += "  void add_{{FN_NAME}}({{U_FIELD_TYPE}}{{U_FIELD_NAME}}) {";
+          code_ += "    add_{{U_GET_TYPE}}({{U_ELEMENT_TYPE}});";
+          code_ += "    add_{{FIELD_NAME}}({{U_CAST}});";
+          code_ += "  }";
+        }
+      }
     }
 
     // Builder constructor

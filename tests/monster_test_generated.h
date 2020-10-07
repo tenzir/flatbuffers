@@ -1793,6 +1793,18 @@ struct MonsterBuilder {
   void add_test(flatbuffers::Offset<void> test) {
     fbb_.AddOffset(Monster::VT_TEST, test);
   }
+  void add_test(flatbuffers::Offset<MyGame::Example::Monster> Monster) {
+    add_test_type(MyGame::Example::Any_Monster);
+    add_test(Monster.Union());
+  }
+  void add_test(flatbuffers::Offset<MyGame::Example::TestSimpleTableWithEnum> TestSimpleTableWithEnum) {
+    add_test_type(MyGame::Example::Any_TestSimpleTableWithEnum);
+    add_test(TestSimpleTableWithEnum.Union());
+  }
+  void add_test(flatbuffers::Offset<MyGame::Example2::Monster> MyGame_Example2_Monster) {
+    add_test_type(MyGame::Example::Any_MyGame_Example2_Monster);
+    add_test(MyGame_Example2_Monster.Union());
+  }
   void add_test4(flatbuffers::Offset<flatbuffers::Vector<const MyGame::Example::Test *>> test4) {
     fbb_.AddOffset(Monster::VT_TEST4, test4);
   }
@@ -1901,11 +1913,35 @@ struct MonsterBuilder {
   void add_any_unique(flatbuffers::Offset<void> any_unique) {
     fbb_.AddOffset(Monster::VT_ANY_UNIQUE, any_unique);
   }
+  void add_any_unique_M(flatbuffers::Offset<MyGame::Example::Monster> M) {
+    add_any_unique_type(MyGame::Example::AnyUniqueAliases_M);
+    add_any_unique(M.Union());
+  }
+  void add_any_unique_TS(flatbuffers::Offset<MyGame::Example::TestSimpleTableWithEnum> TS) {
+    add_any_unique_type(MyGame::Example::AnyUniqueAliases_TS);
+    add_any_unique(TS.Union());
+  }
+  void add_any_unique_M2(flatbuffers::Offset<MyGame::Example2::Monster> M2) {
+    add_any_unique_type(MyGame::Example::AnyUniqueAliases_M2);
+    add_any_unique(M2.Union());
+  }
   void add_any_ambiguous_type(MyGame::Example::AnyAmbiguousAliases any_ambiguous_type) {
     fbb_.AddElement<uint8_t>(Monster::VT_ANY_AMBIGUOUS_TYPE, static_cast<uint8_t>(any_ambiguous_type), 0);
   }
   void add_any_ambiguous(flatbuffers::Offset<void> any_ambiguous) {
     fbb_.AddOffset(Monster::VT_ANY_AMBIGUOUS, any_ambiguous);
+  }
+  void add_any_ambiguous_M1(flatbuffers::Offset<MyGame::Example::Monster> M1) {
+    add_any_ambiguous_type(MyGame::Example::AnyAmbiguousAliases_M1);
+    add_any_ambiguous(M1.Union());
+  }
+  void add_any_ambiguous_M2(flatbuffers::Offset<MyGame::Example::Monster> M2) {
+    add_any_ambiguous_type(MyGame::Example::AnyAmbiguousAliases_M2);
+    add_any_ambiguous(M2.Union());
+  }
+  void add_any_ambiguous_M3(flatbuffers::Offset<MyGame::Example::Monster> M3) {
+    add_any_ambiguous_type(MyGame::Example::AnyAmbiguousAliases_M3);
+    add_any_ambiguous(M3.Union());
   }
   void add_vector_of_enums(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> vector_of_enums) {
     fbb_.AddOffset(Monster::VT_VECTOR_OF_ENUMS, vector_of_enums);

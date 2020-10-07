@@ -350,6 +350,14 @@ struct RootBuilder {
   void add_c(flatbuffers::Offset<void> c) {
     fbb_.AddOffset(Root::VT_C, c);
   }
+  void add_c(flatbuffers::Offset<Evolution::V1::TableA> TableA) {
+    add_c_type(Evolution::V1::Union::TableA);
+    add_c(TableA.Union());
+  }
+  void add_c(flatbuffers::Offset<Evolution::V1::TableB> TableB) {
+    add_c_type(Evolution::V1::Union::TableB);
+    add_c(TableB.Union());
+  }
   void add_d(Evolution::V1::Enum d) {
     fbb_.AddElement<int8_t>(Root::VT_D, static_cast<int8_t>(d), 0);
   }
@@ -373,6 +381,14 @@ struct RootBuilder {
   }
   void add_j(flatbuffers::Offset<void> j) {
     fbb_.AddOffset(Root::VT_J, j);
+  }
+  void add_j(flatbuffers::Offset<Evolution::V1::TableA> TableA) {
+    add_j_type(Evolution::V1::Union::TableA);
+    add_j(TableA.Union());
+  }
+  void add_j(flatbuffers::Offset<Evolution::V1::TableB> TableB) {
+    add_j_type(Evolution::V1::Union::TableB);
+    add_j(TableB.Union());
   }
   explicit RootBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {

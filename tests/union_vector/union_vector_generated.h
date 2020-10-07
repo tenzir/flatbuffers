@@ -202,9 +202,6 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Rapunzel FLATBUFFERS_FINAL_CLASS {
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
     return RapunzelTypeTable();
   }
-  static FLATBUFFERS_CONSTEXPR const char *GetFullyQualifiedName() {
-    return "Rapunzel";
-  }
   Rapunzel()
       : hair_length_(0) {
   }
@@ -238,9 +235,6 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) BookReader FLATBUFFERS_FINAL_CLASS {
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
     return BookReaderTypeTable();
   }
-  static FLATBUFFERS_CONSTEXPR const char *GetFullyQualifiedName() {
-    return "BookReader";
-  }
   BookReader()
       : books_read_(0) {
   }
@@ -268,9 +262,6 @@ inline bool operator!=(const BookReader &lhs, const BookReader &rhs) {
 
 struct AttackerT : public flatbuffers::NativeTable {
   typedef Attacker TableType;
-  static FLATBUFFERS_CONSTEXPR const char *GetFullyQualifiedName() {
-    return "AttackerT";
-  }
   int32_t sword_attack_damage;
   AttackerT()
       : sword_attack_damage(0) {
@@ -292,9 +283,6 @@ struct Attacker FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef AttackerBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
     return AttackerTypeTable();
-  }
-  static FLATBUFFERS_CONSTEXPR const char *GetFullyQualifiedName() {
-    return "Attacker";
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_SWORD_ATTACK_DAMAGE = 4
@@ -345,9 +333,6 @@ flatbuffers::Offset<Attacker> CreateAttacker(flatbuffers::FlatBufferBuilder &_fb
 
 struct MovieT : public flatbuffers::NativeTable {
   typedef Movie TableType;
-  static FLATBUFFERS_CONSTEXPR const char *GetFullyQualifiedName() {
-    return "MovieT";
-  }
   CharacterUnion main_character;
   std::vector<CharacterUnion> characters;
   MovieT() {
@@ -370,9 +355,6 @@ struct Movie FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef MovieBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
     return MovieTypeTable();
-  }
-  static FLATBUFFERS_CONSTEXPR const char *GetFullyQualifiedName() {
-    return "Movie";
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_MAIN_CHARACTER_TYPE = 4,
@@ -445,6 +427,30 @@ struct MovieBuilder {
   }
   void add_main_character(flatbuffers::Offset<void> main_character) {
     fbb_.AddOffset(Movie::VT_MAIN_CHARACTER, main_character);
+  }
+  void add_main_character_MuLan(flatbuffers::Offset<Attacker> MuLan) {
+    add_main_character_type(Character_MuLan);
+    add_main_character(MuLan.Union());
+  }
+  void add_main_character(const Rapunzel *Rapunzel) {
+    add_main_character_type(Character_Rapunzel);
+    add_main_character(fbb_.CreateStruct(*Rapunzel).Union());
+  }
+  void add_main_character_Belle(const BookReader *Belle) {
+    add_main_character_type(Character_Belle);
+    add_main_character(fbb_.CreateStruct(*Belle).Union());
+  }
+  void add_main_character_BookFan(const BookReader *BookFan) {
+    add_main_character_type(Character_BookFan);
+    add_main_character(fbb_.CreateStruct(*BookFan).Union());
+  }
+  void add_main_character_Other(flatbuffers::Offset<flatbuffers::String> Other) {
+    add_main_character_type(Character_Other);
+    add_main_character(Other.Union());
+  }
+  void add_main_character_Unused(flatbuffers::Offset<flatbuffers::String> Unused) {
+    add_main_character_type(Character_Unused);
+    add_main_character(Unused.Union());
   }
   void add_characters_type(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> characters_type) {
     fbb_.AddOffset(Movie::VT_CHARACTERS_TYPE, characters_type);
